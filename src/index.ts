@@ -1,11 +1,28 @@
-const corsHeaders = {
-	"Access-Control-Allow-Origin": "*",
-	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-	"Access-Control-Max-Age": "86400",
-};
+function isAllowedOrigin(origin: string | null): boolean {
+	if (!origin) return false;
+	try {
+		const { hostname } = new URL(origin);
+		return hostname === "crosbreaker.dev" || hostname.endsWith(".crosbreaker.dev");
+	} catch {
+		return false;
+	}
+}
+
+function getCorsHeaders(request: Request): Record<string, string> {
+	const origin = request.headers.get("Origin");
+	if (!isAllowedOrigin(origin)) return {};
+	return {
+		"Access-Control-Allow-Origin": origin!,
+		"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+		"Access-Control-Max-Age": "86400",
+		"Vary": "Origin",
+	};
+}
 
 export default {
 	async fetch(request): Promise<Response> {
+		const corsHeaders = getCorsHeaders(request);
+
 		if (request.method === "OPTIONS") {
 			return new Response(null, { headers: corsHeaders });
 		}
